@@ -61,6 +61,7 @@ async def get_stats(user_id, headers, num_matches = 3):
 
             after_points = []
             diff_points = []
+            rank_nums = []
             maps = []
             start_times = []
             arrows = []
@@ -68,38 +69,19 @@ async def get_stats(user_id, headers, num_matches = 3):
             for match in matches:
                 if (match['CompetitiveMovement'] == 'MOVEMENT_UNKNOWN'):
                     continue
-                elif (match['CompetitiveMovement'] == 'PROMOTED'):
-                    before = match['TierProgressBeforeUpdate']
-                    after = match['TierProgressAfterUpdate']
-                    after_points.append(after)
-                    diff = (after - before) + 100
-                    diff_points.append(diff)
-                    rank_num = match['TierBeforeUpdate']
-                    count += 1
-                    maps.append(match['MapID'])
-                    arrows.append(match['CompetitiveMovement'])
-                    start_time = match['MatchStartTime'] / 1000
-                    start_times.append(datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M'))
-                elif (match['CompetitiveMovement'] == 'DEMOTED'):
-                    before = match['TierProgressBeforeUpdate']
-                    after = match['TierProgressAfterUpdate']
-                    after_points.append(after)
-                    diff = (after - before) - 100
-                    diff_points.append(diff)
-                    rank_num = match['TierBeforeUpdate']
-                    count += 1
-                    maps.append(match['MapID'])
-                    arrows.append(match['CompetitiveMovement'])
-                    start_time = match['MatchStartTime'] / 1000
-                    start_times.append(datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M'))
                 else:
                     before = match['TierProgressBeforeUpdate']
                     after = match['TierProgressAfterUpdate']
                     after_points.append(after)
-                    diff = after - before
+                    if (match['CompetitiveMovement'] == 'PROMOTED'):
+                        diff = (after - before) + 100
+                    elif (match['CompetitiveMovement'] == 'DEMOTED'):
+                        diff = (after - before) - 100
+                    else:
+                        diff = after - before
                     diff_points.append(diff)
-                    rank_num = match['TierBeforeUpdate']
                     count += 1
+                    rank_nums.append(match['TierAfterUpdate'])
                     maps.append(match['MapID'])
                     arrows.append(match['CompetitiveMovement'])
                     start_time = match['MatchStartTime'] / 1000
@@ -111,7 +93,7 @@ async def get_stats(user_id, headers, num_matches = 3):
             if (count <= 0):
                 return
             else:
-                return after_points, diff_points, rank_num, maps, arrows, start_times
+                return after_points, diff_points, rank_nums, maps, arrows, start_times
 
     except Exception as e:
         print('type error: ' + str(e))
