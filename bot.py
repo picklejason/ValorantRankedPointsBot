@@ -1,3 +1,6 @@
+import resources as res
+import RSO_AuthFlow as rs
+
 import asyncio
 import os
 import sys
@@ -7,18 +10,13 @@ import asyncio
 import json
 import discord
 from discord.ext import commands, tasks
+from dotenv import load_dotenv
 
-import config
-import resources as res
-import RSO_AuthFlow as rs
-
-TOKEN = config.TOKEN
+load_dotenv()
+TOKEN = os.getenv('DISCORD_TOKEN')
 bot = commands.Bot(command_prefix='-')
 
-# min = 1
-# max = 5
-
-async def process_stats(author, num_matches = 3):
+async def process_stats(author, num_matches=3):
 
     with open ('info.json', 'r') as f:
         users = json.load(f)
@@ -27,9 +25,8 @@ async def process_stats(author, num_matches = 3):
     password = users['admin']['password']
     user_id = users[author]['user_id']
     _, headers = await rs.run(username, password)
-    after, diff, rank_num, maps, arrows, start_times = await rs.get_stats(user_id, headers, num_matches)
-
-    print(start_times)
+    after, diff, rank_nums, maps, arrows, start_times = await rs.get_stats(user_id, headers, num_matches)
+    rank_num = rank_nums[0]
     stats = zip(diff, maps, arrows, start_times)
     rank = res.ranks[str(rank_num)]
     RP = after[0]
@@ -42,7 +39,6 @@ async def login(ctx, username : str = '', password : str = ''):
 
     try:
         author = str(ctx.author.id)
-
         with open ('info.json', 'r') as f:
             users = json.load(f)
 
@@ -51,9 +47,9 @@ async def login(ctx, username : str = '', password : str = ''):
         if not author in users:
             users[author] = {}
             users[author]['user_id'] = user_id
-
             with open('info.json', 'w') as f:
                 json.dump(users, f, indent=4)
+
             await ctx.send('Login Successful.')
         else:
             await ctx.send('You are already logged in.')
@@ -65,15 +61,14 @@ async def login(ctx, username : str = '', password : str = ''):
 async def logout(ctx):
 
     author = str(ctx.author.id)
-
     with open ('info.json', 'r') as f:
         users = json.load(f)
 
     if author in users:
         del users[author]
-
         with open('info.json', 'w') as f:
             json.dump(users, f, indent=4)
+
         await ctx.send('You have logged out.')
     else:
         await ctx.send('You are not logged in.')
