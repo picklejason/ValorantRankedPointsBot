@@ -23,19 +23,19 @@ This bot is currently not hosted publicly as it can have access to your Valorant
 ## Setup
 
 * Install requirements
-
-`python -m pip install -r requirements.txt`
-
+```
+python -m pip install -r requirements.txt
+```
 * Store discord token in .env
-
-`DISCORD_TOKEN=<token>`
-* Enter any Valorant username and password (Feel free to create a new one if you don't want to use your main) into info.json
-
-`"admin": {
-        "username": "username",
-        "password": "password"
-    }`
-
+```
+DISCORD_TOKEN=<token>
+```
+* Enter and store any Valorant username and password (Feel free to create a new one if you don't want to use your main) in .env
+```
+USERNAME=<username>
+PASSWORD=<password>
+```
 * Run the bot
-
-`python bot.py`
+```
+python bot.py
+```

@@ -14,6 +14,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
+USERNAME = os.getenv('USERNAME')
+PASSWORD = os.getenv('PASSWORD')
+
 bot = commands.Bot(command_prefix='-')
 
 async def process_stats(author, num_matches=3):
@@ -21,10 +24,8 @@ async def process_stats(author, num_matches=3):
     with open ('info.json', 'r') as f:
         users = json.load(f)
 
-    username = users['admin']['username']
-    password = users['admin']['password']
     user_id = users[author]['user_id']
-    _, headers = await rs.run(username, password)
+    _, headers = await rs.run(USERNAME, PASSWORD)
     after, diff, rank_nums, maps, arrows, start_times = await rs.get_stats(user_id, headers, num_matches)
     rank_num = rank_nums[0]
     stats = zip(diff, maps, arrows, start_times)
