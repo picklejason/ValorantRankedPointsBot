@@ -23,8 +23,8 @@ bot = commands.Bot(command_prefix='-')
 @bot.event
 async def on_ready():
     print('Bot connected.')
-    send_update.start()
     relog.start()
+    send_update.start()
 
 @tasks.loop(seconds=3600)
 async def relog():
