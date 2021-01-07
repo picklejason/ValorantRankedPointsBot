@@ -11,7 +11,7 @@ async def run(username, password):
         data = {
             'client_id': 'play-valorant-web-prod',
             'nonce': '1',
-            'redirect_uri': 'https://beta.playvalorant.com/opt_in',
+            'redirect_uri': 'https://playvalorant.com/opt_in',
             'response_type': 'token id_token',
         }
         await session.post('https://auth.riotgames.com/api/v1/authorization', json=data)
@@ -65,6 +65,7 @@ async def get_stats(user_id, headers, num_matches = 3):
             maps = []
             start_times = []
             arrows = []
+            curr_matches = []
             count = 0
             for match in matches:
                 if (match['CompetitiveMovement'] == 'MOVEMENT_UNKNOWN'):
@@ -86,6 +87,7 @@ async def get_stats(user_id, headers, num_matches = 3):
                     arrows.append(match['CompetitiveMovement'])
                     start_time = match['MatchStartTime'] / 1000
                     start_times.append(datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M'))
+                    curr_matches.append(match['MatchID'])
 
                 if (count >= num_matches): # [num] recent competitve matches found
                     break
@@ -93,10 +95,35 @@ async def get_stats(user_id, headers, num_matches = 3):
             if (count <= 0):
                 return
             else:
-                return after_points, diff_points, rank_nums, maps, arrows, start_times
+                return after_points, diff_points, rank_nums, maps, arrows, start_times, curr_matches
 
-    except Exception as e:
-        print('type error: ' + str(e))
+    except:
+        print(traceback.format_exc())
+
+async def check(user_id, headers, prev_matches):
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f'https://pd.na.a.pvp.net/mmr/v1/players/{user_id}/competitiveupdates?startIndex=0&endIndex=20', headers=headers) as r:
+                data = json.loads(await r.text())
+
+            matches = data['Matches']
+            curr_matches = []
+            count = 0
+            for match in matches:
+                if (match['CompetitiveMovement'] == 'MOVEMENT_UNKNOWN'):
+                    continue
+                else:
+                    curr_matches.append(match['MatchID'])
+                    count += 1
+
+                if (count >= 3):
+                    break
+
+            if curr_matches:
+                return curr_matches[0] == prev_matches[0]
+            else:
+                return True
+    except:
         print(traceback.format_exc())
 
 if __name__ == '__main__':
