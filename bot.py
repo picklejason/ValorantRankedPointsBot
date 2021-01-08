@@ -20,7 +20,7 @@ from matplotlib.collections import LineCollection
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
-USERNAME = os.getenv('USERNAME')
+USERNAME = os.getenv('USER_NAME')
 PASSWORD = os.getenv('PASSWORD')
 
 bot = commands.Bot(command_prefix='-')

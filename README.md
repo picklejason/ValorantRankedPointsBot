@@ -31,7 +31,7 @@ DISCORD_TOKEN=<token>
 ```
 * Enter and store any Valorant username and password (Feel free to create a new one if you don't want to use your main) in .env
 ```
-USERNAME=<username>
+USER_NAME=<username>
 PASSWORD=<password>
 ```
 * Run the bot
