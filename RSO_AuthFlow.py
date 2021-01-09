@@ -50,7 +50,6 @@ async def run(username, password):
         return user_id, headers
 
 async def get_stats(user_id, headers, num_matches = 3):
-
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(f'https://pd.na.a.pvp.net/mmr/v1/players/{user_id}/competitiveupdates?startIndex=0&endIndex=20', headers=headers) as r:
@@ -100,29 +99,25 @@ async def get_stats(user_id, headers, num_matches = 3):
     except:
         print(traceback.format_exc())
 
-async def check(user_id, headers, prev_matches):
+async def check(user_id, headers, prev_match):
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(f'https://pd.na.a.pvp.net/mmr/v1/players/{user_id}/competitiveupdates?startIndex=0&endIndex=20', headers=headers) as r:
                 data = json.loads(await r.text())
 
             matches = data['Matches']
-            curr_matches = []
-            count = 0
+            # print(matches)
             for match in matches:
                 if (match['CompetitiveMovement'] == 'MOVEMENT_UNKNOWN'):
                     continue
                 else:
-                    curr_matches.append(match['MatchID'])
-                    count += 1
-
-                if (count >= 3):
+                    curr_match = match['MatchID']
                     break
 
-            if curr_matches:
-                return curr_matches[0] == prev_matches[0]
-            else:
-                return True
+            if curr_match:
+                return curr_match == prev_match
+
+            return True
     except:
         print(traceback.format_exc())
 
