@@ -232,7 +232,7 @@ async def profile(ctx, user = None):
             try:
                 reaction, user_ = await bot.wait_for('reaction_add', check=check, timeout=120)
             except asyncio.TimeoutError:
-                await msg.remove_reaction('📈', bot.user_)
+                await msg.remove_reaction('📈', bot.user)
                 break
             image = await graph(user.id)
             embed.set_image(url=f'attachment://graph.png')
