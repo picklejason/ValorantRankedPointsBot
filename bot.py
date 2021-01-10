@@ -59,8 +59,8 @@ async def send_update():
             if DATABASE_URL:
                 track_user = db.get_track_id(user)
                 if track_user is not None:
-                    player_id = db.get_player_id(user)
-                    prev_match = db.get_match_id(user)
+                    player_id = db.get_player_id(track_user)
+                    prev_match = db.get_match_id(track_user)
 
                     if await rs.check(player_id, headers, prev_match):
                         continue
@@ -175,7 +175,6 @@ async def track(ctx, user = None):
 
     if DATABASE_URL:
         db.set_track_id(ctx.author.id, user.id)
-        db.get_track_id(ctx.author.id)
     else:
         author = str(ctx.author.id)
         with open('info.json', 'r') as f:
