@@ -84,7 +84,7 @@ async def send_update():
                         await discord_user.send(embed = await create_embed(track_user))
                 else:
                     continue
-                    
+
         for user in track_users:
             if DATABASE_URL:
                 player_id = db.get_player_id(user)
@@ -249,7 +249,7 @@ async def process_stats(author, num_matches=3):
         with open ('info.json', 'r') as f:
             users = json.load(f)
 
-        player_id = users[author]['player_id']
+        player_id = users[str(author)]['player_id']
 
     with open('headers.json', 'r') as data:
         headers = json.load(data)['headers']
