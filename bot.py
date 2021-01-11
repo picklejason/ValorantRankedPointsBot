@@ -129,8 +129,8 @@ async def login(ctx, username : str = '', password : str = ''):
 
 # Directly link player ID without entering login info
 @bot.command()
-async def link(ctx, player_id : str):
-    if not player_id:
+async def link(ctx, player_id : str = None):
+    if player_id is None:
         await ctx.send('Please input your Valorant player ID.')
         return
     author = str(ctx.author.id)
@@ -138,16 +138,19 @@ async def link(ctx, player_id : str):
     if DATABASE_URL:
         db.set_player_id(author, player_id)
     else:
-        if player_id:
-            with open('info.json', 'r') as f:
-                users = json.load(f)
+        with open('info.json', 'r') as f:
+            users = json.load(f)
 
-            if not author in users:
-                users[author] = {}
-                users[author]['player_id'] = player_id
-                users[author]['track_id'] = ''
-                with open('info.json', 'w') as f:
-                    json.dump(users, f, indent=4)
+        if not author in users:
+            users[author] = {}
+            users[author]['player_id'] = player_id
+            users[author]['track_id'] = ''
+            users[author]['match_id'] = ''
+        else:
+            users[author]['player_id'] = player_id
+
+        with open('info.json', 'w') as f:
+            json.dump(users, f, indent=4)
 
     await ctx.send('You account has been linked.')
 
