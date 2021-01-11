@@ -54,10 +54,13 @@ async def send_update():
             with open('info.json', 'r') as f:
                 users = json.load(f)
 
+        track_users = []
+
         for user in users:
             discord_user = await bot.fetch_user(user)
             if DATABASE_URL:
                 track_user = db.get_track_id(user)
+
                 if track_user is not None:
                     player_id = db.get_player_id(track_user)
                     prev_match = db.get_match_id(track_user)
@@ -65,7 +68,9 @@ async def send_update():
                     if await rs.check(player_id, headers, prev_match):
                         continue
                     else:
+                        track_users.append(track_user)
                         await discord_user.send(embed = await create_embed(track_user))
+
             else:
                 if not users[user]['track_id'] == "":
                     track_user = users[user]['track_id']
@@ -75,42 +80,26 @@ async def send_update():
                     if await rs.check(player_id, headers, prev_match):
                         continue
                     else:
+                        track_users.append(track_user)
                         await discord_user.send(embed = await create_embed(track_user))
                 else:
                     continue
+                    
+        for user in track_users:
+            if DATABASE_URL:
+                player_id = db.get_player_id(user)
+                prev_match = db.get_match_id(user)
+            else:
+                player_id = users[user]['player_id']
+                prev_match = users[user]['match_id']
+
+            _, _, _, _, _, curr_match = await process_stats(user, 1)
+            print(f'Previous Match: {prev_match}')
+            print(f'Current Match: {curr_match}')
+            await update_match(user, curr_match)
 
     except Exception as e:
         print(traceback.format_exc())
-
-# Parse and process json from request
-async def process_stats(author, num_matches=3):
-    if DATABASE_URL:
-        player_id = db.get_player_id(author)
-    else:
-        with open ('info.json', 'r') as f:
-            users = json.load(f)
-
-        player_id = users[author]['player_id']
-
-    with open('headers.json', 'r') as data:
-        headers = json.load(data)['headers']
-
-    after, diff, rank_nums, maps, arrows, start_times, prev_matches = await rs.get_stats(player_id, headers, num_matches)
-    rank_num = rank_nums[0]
-    stats = zip(diff, maps, arrows, start_times)
-    rank = res.ranks[str(rank_num)]
-    RP = after[0]
-    ELO = (rank_num * 100) - 300 + RP
-
-    if DATABASE_URL:
-        db.set_match_id(author, prev_matches[0])
-    else:
-        users[author]['match_id'] = prev_matches[0]
-
-        with open('info.json', 'w') as f:
-            json.dump(users, f, indent=4)
-
-    return stats, rank_num, rank, RP, ELO
 
 # Log in using RSO_AuthFlow and links discord ID with player ID
 @bot.command()
@@ -118,7 +107,6 @@ async def login(ctx, username : str = '', password : str = ''):
     author = str(ctx.author.id)
     try:
         player_id, _ = await rs.run(username, password)
-
         if DATABASE_URL:
             db.set_player_id(author, str(player_id))
         else:
@@ -244,9 +232,40 @@ async def profile(ctx, user = None):
         print(traceback.format_exc())
         await ctx.send('User is not logged in or has not played enough recent competitive games')
 
+async def update_match(author, curr_matches):
+    if DATABASE_URL:
+        db.set_match_id(author, curr_matches[0])
+    else:
+        users[author]['match_id'] = curr_matches[0]
+
+        with open('info.json', 'w') as f:
+            json.dump(users, f, indent=4)
+
+# Parse and process json from request
+async def process_stats(author, num_matches=3):
+    if DATABASE_URL:
+        player_id = db.get_player_id(author)
+    else:
+        with open ('info.json', 'r') as f:
+            users = json.load(f)
+
+        player_id = users[author]['player_id']
+
+    with open('headers.json', 'r') as data:
+        headers = json.load(data)['headers']
+
+    after, diff, rank_nums, maps, arrows, start_times, curr_matches = await rs.get_stats(player_id, headers, num_matches)
+    rank_num = rank_nums[0]
+    stats = zip(diff, maps, arrows, start_times)
+    rank = res.ranks[str(rank_num)]
+    RP = after[0]
+    ELO = (rank_num * 100) - 300 + RP
+
+    return stats, rank_num, rank, RP, ELO, curr_matches
+
 async def create_embed(discord_id):
     user = await bot.fetch_user(discord_id)
-    stats, rank_num, rank, RP, ELO = await process_stats(discord_id, 3)
+    stats, rank_num, rank, RP, ELO, _ = await process_stats(discord_id, 3)
     description = f'**{RP} RP** | **{ELO} ELO**'
 
     embed = discord.Embed(title=rank, description=description)
@@ -271,7 +290,7 @@ async def graph(user_id):
     with open('headers.json', 'r') as data:
         headers = json.load(data)['headers']
 
-    after, diff, rank_nums, maps, arrows, start_times, prev_matches = await rs.get_stats(player_id, headers, 20)
+    after, _, rank_nums, _, _, _, _ = await rs.get_stats(player_id, headers, 20)
     ELO = list(reversed([(rank_num * 100) - 300 + RP for RP, rank_num in zip(after, rank_nums)]))
 
     x = np.arange(len(ELO))
