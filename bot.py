@@ -118,7 +118,9 @@ async def login(ctx, username : str = '', password : str = ''):
                 users[author]['player_id'] = player_id
                 users[author]['track_id'] = ''
                 users[author]['match_id'] = ''
-                with open('info.json', 'w') as f:
+            else:
+                users[author]['player_id'] = player_id
+            with open('info.json', 'w') as f:
                     json.dump(users, f, indent=4)
 
         await ctx.send('Login Successful.')
@@ -217,7 +219,7 @@ async def profile(ctx, user = None):
 
         await msg.add_reaction('📈')
         def check(reaction, user):
-            return user == ctx.message.author and str(reaction.emoji) == '📈'
+            return user == ctx.message.author and str(reaction.emoji) == '📈' and reaction.message.id == msg.id
 
         while True:
             try:
