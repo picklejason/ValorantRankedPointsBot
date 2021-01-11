@@ -241,6 +241,9 @@ async def update_match(author, curr_matches):
     if DATABASE_URL:
         db.set_match_id(author, curr_matches[0])
     else:
+        with open('info.json', 'r') as f:
+            users = json.load(f)
+            
         users[author]['match_id'] = curr_matches[0]
 
         with open('info.json', 'w') as f:
