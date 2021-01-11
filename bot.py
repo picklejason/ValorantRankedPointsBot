@@ -285,7 +285,7 @@ async def graph(user_id):
     else:
         with open ('info.json', 'r') as f:
             users = json.load(f)
-        player_id = users[user]['player_id']
+        player_id = users[str(user_id)]['player_id']
 
     with open('headers.json', 'r') as data:
         headers = json.load(data)['headers']
