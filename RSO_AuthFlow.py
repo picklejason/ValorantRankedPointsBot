@@ -70,8 +70,8 @@ async def get_stats(user_id, headers, num_matches = 3):
                 if (match['CompetitiveMovement'] == 'MOVEMENT_UNKNOWN'):
                     continue
                 else:
-                    before = match['TierProgressBeforeUpdate']
-                    after = match['TierProgressAfterUpdate']
+                    before = match['RankedRatingBeforeUpdate']
+                    after = match['RankedRatingAfterUpdate']
                     after_points.append(after)
                     if (match['CompetitiveMovement'] == 'PROMOTED'):
                         diff = (after - before) + 100
