@@ -1,90 +1,70 @@
 import os
-
+import pymongo
+from pymongo import MongoClient
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, Column, Integer, BigInteger, String, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.ext.mutable import MutableList
-from sqlalchemy.orm import sessionmaker, relationship
+
 load_dotenv()
-DATABASE_URL = os.getenv('DATABASE_URL')
+DATABASE_URI = os.getenv("DATABASE_URI")
 
-engine = create_engine(DATABASE_URL)
-Base = declarative_base()
+client = MongoClient(DATABASE_URI)
+db = client["Discord"]
+collection = db["profiles"]
 
-class User(Base):
-	__tablename__ = 'users'
-	id = Column('id', BigInteger, primary_key=True)
-	player_id = Column('player_id', String)
-	track_id = Column('track_id', BigInteger)
-	match_id = Column('match_id', String)
 
-	def __init__ (self, id):
-		self.id = id
+def set_player_name(id, name):
+    if collection.count_documents({"_id": id}, limit=1) == 0:
+        collection.insert_one({"_id": id, "player_name": name})
+    else:
+        collection.update_one({"_id": id}, {"$set": {"player_name": name}})
 
-Base.metadata.create_all(bind=engine)
-Session = sessionmaker(bind=engine)
 
-def get_user(session, id):
-	return session.query(User).filter_by(id=id).one_or_none()
+def get_player_name(id):
+    player_name = collection.find_one({"_id": id}, {"_id": 0, "player_name": 1})
+    if player_name is not None:
+        return player_name.get("player_name")
+    return None
 
-def get_attr(id, attr):
-	if not attr:
-		return
-	session = Session()
-	for id in [id]:
-		if not id:
-			continue
-		user = get_user(session, id)
-		if hasattr(user, attr) and getattr(user, attr) != None:
-			return getattr(user, attr)
-	session.close()
-
-def set_attr(id, attr, val):
-	if not id or not attr or not val:
-		return
-	session = Session()
-	user = get_user(session, id)
-	if not user:
-		user = User(id)
-	setattr(user, attr, val)
-	session.add(user)
-	session.commit()
-	session.close()
 
 def set_player_id(id, player_id):
-	set_attr(id, 'player_id', player_id)
+    collection.update_one({"_id": id}, {"$set": {"player_id": player_id}})
+
 
 def get_player_id(id):
-	return get_attr(id, 'player_id')
+    player_id = collection.find_one({"_id": id}, {"_id": 0, "player_id": 1})
+    if player_id is not None:
+        return player_id.get("player_id")
+    return None
 
-def set_track_id(id, track_id):
-	set_attr(id, 'track_id', track_id)
 
-def get_track_id(id):
-	return get_attr(id, 'track_id')
+def del_player_id(id):
+    collection.update_one({"_id": id}, {"$unset": {"player_id": 1}})
 
-def del_track_id(id):
-	if not id:
-		return
-	session = Session()
-	user = session.query(User).filter_by(id=id).one_or_none()
-	if user.track_id:
-		user.track_id = None
-		session.add(user)
-		session.commit()
-	session.close()
 
-def set_match_id(id, match_id):
-	set_attr(id, 'match_id', match_id)
+def set_track_player(id, player):
+    collection.update_one({"_id": id}, {"$set": {"track_player": player}})
+
+
+def get_track_player(id):
+    track_player = collection.find_one({"_id": id}, {"_id": 0, "track_player": 1})
+    if track_player is not None:
+        return track_player.get("track_player")
+    return None
+
+
+def del_track_player(id):
+    collection.update_one({"_id": id}, {"$unset": {"track_player": 1}})
+
+
+def set_match_id(id, match):
+    collection.update_one({"_id": id}, {"$set": {"match_id": match}})
+
 
 def get_match_id(id):
-	return get_attr(id, 'match_id')
+    match_id = collection.find_one({"_id": id}, {"_id": 0, "match_id": 1})
+    if match_id is not None:
+        return match_id.get("match_id")
+    return None
+
 
 def get_all_users():
-
-	users = []
-	session = Session()
-	for user in session.query(User.id):
-		users.append(user.id)
-	session.close()
-	return users
+    return collection.find().distinct("_id")
